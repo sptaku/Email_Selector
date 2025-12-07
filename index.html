@@ -319,6 +319,34 @@
             background: var(--border-color);
         }
 
+        .sort-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-sort {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-sort:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-sort.active {
+            background: linear-gradient(135deg, #6c5ce7 0%, #5541d9 100%);
+            color: white;
+            border-color: transparent;
+        }
+
         #outputArea {
             background: var(--bg-tertiary);
             height: 250px;
@@ -527,6 +555,20 @@
                 </div>
             </div>
             <textarea id="outputArea" readonly placeholder="フィルタリング結果がここに表示されます"></textarea>
+            <div class="sort-bar">
+                <button class="btn btn-sort active" id="sortOriginal" onclick="sortEmails('original')">
+                    <span>📄</span>
+                    元の順序
+                </button>
+                <button class="btn btn-sort" id="sortAsc" onclick="sortEmails('asc')">
+                    <span>🔤</span>
+                    A → Z
+                </button>
+                <button class="btn btn-sort" id="sortDesc" onclick="sortEmails('desc')">
+                    <span>🔠</span>
+                    Z → A
+                </button>
+            </div>
         </div>
 
         <div class="stats">
@@ -556,6 +598,10 @@
     </div>
 
     <script>
+        // 元の結果を保存する変数
+        let originalResult = [];
+        let currentSort = 'original';
+
         // メールアドレスを抽出する関数
         function extractEmail(line) {
             line = line.trim();
@@ -618,6 +664,11 @@
             // 重複を除去して出力
             const uniqueResult = [...new Set(result)];
             
+            // 元の結果を保存
+            originalResult = [...uniqueResult];
+            currentSort = 'original';
+            updateSortButtons();
+            
             // 結果を出力
             document.getElementById('outputArea').value = uniqueResult.join('\n');
             
@@ -627,6 +678,41 @@
             document.getElementById('statResult').textContent = uniqueResult.length;
             
             showToast('フィルタリングが完了しました');
+        }
+
+        // 並べ替え実行
+        function sortEmails(order) {
+            if (originalResult.length === 0) {
+                showToast('先にフィルタリングを実行してください');
+                return;
+            }
+            
+            let sorted;
+            switch (order) {
+                case 'asc':
+                    sorted = [...originalResult].sort((a, b) => a.localeCompare(b));
+                    break;
+                case 'desc':
+                    sorted = [...originalResult].sort((a, b) => b.localeCompare(a));
+                    break;
+                case 'original':
+                default:
+                    sorted = [...originalResult];
+                    break;
+            }
+            
+            currentSort = order;
+            updateSortButtons();
+            document.getElementById('outputArea').value = sorted.join('\n');
+            
+            const orderNames = { 'original': '元の順序', 'asc': 'A → Z', 'desc': 'Z → A' };
+            showToast(`${orderNames[order]} で並べ替えました`);
+        }
+
+        // ソートボタンの状態を更新
+        function updateSortButtons() {
+            document.querySelectorAll('.btn-sort').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('sort' + currentSort.charAt(0).toUpperCase() + currentSort.slice(1)).classList.add('active');
         }
 
         // すべてクリア
@@ -639,6 +725,12 @@
             document.getElementById('statOriginal').textContent = '0';
             document.getElementById('statRemoved').textContent = '0';
             document.getElementById('statResult').textContent = '0';
+            
+            // 元の結果とソート状態をリセット
+            originalResult = [];
+            currentSort = 'original';
+            updateSortButtons();
+            
             showToast('すべてクリアしました');
         }
 
