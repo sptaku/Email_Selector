@@ -73,5 +73,7 @@ MIT License
 
 ## 作者
 
+TAK
+
 © 2025
 
