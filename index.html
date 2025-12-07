@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Selector - メールアドレスフィルタリングツール</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a2332;
+            --bg-tertiary: #243044;
+            --accent-primary: #00d4aa;
+            --accent-secondary: #00a88a;
+            --accent-warning: #ff6b6b;
+            --text-primary: #e7edf4;
+            --text-secondary: #8899a6;
+            --text-muted: #5c6e7e;
+            --border-color: #2f3f50;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 168, 138, 0.06) 0%, transparent 50%),
+                linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .privacy-notice {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .privacy-notice::before {
+            content: "🔒";
+            font-size: 1.5rem;
+        }
+
+        .privacy-notice p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .privacy-notice strong {
+            color: var(--accent-warning);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.6s ease-out 0.3s both;
+        }
+
+        .input-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-section:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 32px var(--shadow-color);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-badge {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--bg-primary);
+        }
+
+        .section-badge.exclude {
+            background: linear-gradient(135deg, var(--accent-warning) 0%, #cc5555 100%);
+        }
+
+        .section-label {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .section-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .count-badge {
+            background: var(--bg-tertiary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.15);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 16px rgba(0, 212, 170, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 212, 170, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            border-color: var(--text-muted);
+        }
+
+        .output-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            animation: fadeIn 0.6s ease-out 0.5s both;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .output-badge {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+            color: white;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 16px rgba(74, 158, 255, 0.3);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(74, 158, 255, 0.4);
+        }
+
+        .btn-copy {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-copy:hover {
+            background: var(--border-color);
+        }
+
+        #outputArea {
+            background: var(--bg-tertiary);
+            height: 250px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            animation: fadeIn 0.6s ease-out 0.6s both;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-primary);
+        }
+
+        .stat-value.removed {
+            color: var(--accent-warning);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            animation: fadeIn 0.6s ease-out 0.7s both;
+        }
+
+        footer a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .output-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .output-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="container">
+        <header>
+            <h1>📧 Email Selector</h1>
+            <p class="subtitle">メールアドレスリストのフィルタリングツール</p>
+        </header>
+
+        <div class="privacy-notice">
+            <p>
+                <strong>プライバシー保護：</strong>
+                入力・出力されたメールアドレスはサーバーに送信・保存されません。すべての処理はブラウザ内で完結します。
+                このページを閉じると、入力されたデータはすべて破棄されます。
+            </p>
+        </div>
+
+        <div class="main-grid">
+            <div class="input-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <div class="section-badge">A</div>
+                        <div>
+                            <div class="section-label">メインリスト</div>
+                            <div class="section-description">フィルタリング対象のメールアドレス</div>
+                        </div>
+                    </div>
+                    <div class="count-badge" id="countA">0 件</div>
+                </div>
+                <textarea 
+                    id="listA" 
+                    placeholder="メールアドレスを1行ずつ入力してください&#10;例:&#10;taro@example.com&#10;山田太郎 <hanako@example.com>&#10;info@test.org"
+                ></textarea>
+            </div>
+
+            <div class="input-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <div class="section-badge exclude">B</div>
+                        <div>
+                            <div class="section-label">除外リスト</div>
+                            <div class="section-description">削除したいメールアドレス</div>
+                        </div>
+                    </div>
+                    <div class="count-badge" id="countB">0 件</div>
+                </div>
+                <textarea 
+                    id="listB" 
+                    placeholder="除外したいメールアドレスを1行ずつ入力してください&#10;例:&#10;hanako@example.com&#10;test@example.org"
+                ></textarea>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-primary" onclick="filterEmails()">
+                <span>▶</span>
+                フィルタリング実行
+            </button>
+            <button class="btn btn-secondary" onclick="clearAll()">
+                <span>↻</span>
+                すべてクリア
+            </button>
+        </div>
+
+        <div class="output-section">
+            <div class="output-header">
+                <div class="section-title">
+                    <div class="output-badge">C</div>
+                    <div>
+                        <div class="section-label">出力結果</div>
+                        <div class="section-description">Bに含まれないメールアドレス</div>
+                    </div>
+                </div>
+                <div class="output-actions">
+                    <button class="btn btn-copy" onclick="copyToClipboard()">
+                        <span>📋</span>
+                        コピー
+                    </button>
+                    <button class="btn btn-download" onclick="downloadResult()">
+                        <span>⬇</span>
+                        ダウンロード
+                    </button>
+                </div>
+            </div>
+            <textarea id="outputArea" readonly placeholder="フィルタリング結果がここに表示されます"></textarea>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="statOriginal">0</div>
+                <div class="stat-label">入力件数 (A)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value removed" id="statRemoved">0</div>
+                <div class="stat-label">除外件数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statResult">0</div>
+                <div class="stat-label">出力件数 (C)</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Email Selector - すべての処理はブラウザ内で完結します</p>
+            <p>© 2025 - <a href="https://github.com" target="_blank">GitHub</a>で公開中</p>
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-icon">✓</span>
+        <span id="toastMessage">コピーしました</span>
+    </div>
+
+    <script>
+        // メールアドレスを抽出する関数
+        function extractEmail(line) {
+            line = line.trim();
+            if (!line) return null;
+
+            // "名前 <email>" 形式の場合
+            const bracketMatch = line.match(/<([^>]+@[^>]+)>/);
+            if (bracketMatch) {
+                return bracketMatch[1].toLowerCase().trim();
+            }
+
+            // メールアドレスのみの場合
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+            const emailMatch = line.match(emailRegex);
+            if (emailMatch) {
+                return emailMatch[0].toLowerCase().trim();
+            }
+
+            return null;
+        }
+
+        // テキストエリアからメールアドレスの配列を取得
+        function getEmailsFromText(text) {
+            const lines = text.split('\n');
+            const emails = [];
+            
+            for (const line of lines) {
+                const email = extractEmail(line);
+                if (email) {
+                    emails.push(email);
+                }
+            }
+            
+            return emails;
+        }
+
+        // カウントを更新
+        function updateCounts() {
+            const listA = document.getElementById('listA').value;
+            const listB = document.getElementById('listB').value;
+            
+            const emailsA = getEmailsFromText(listA);
+            const emailsB = getEmailsFromText(listB);
+            
+            document.getElementById('countA').textContent = `${emailsA.length} 件`;
+            document.getElementById('countB').textContent = `${emailsB.length} 件`;
+        }
+
+        // フィルタリング実行
+        function filterEmails() {
+            const listA = document.getElementById('listA').value;
+            const listB = document.getElementById('listB').value;
+            
+            const emailsA = getEmailsFromText(listA);
+            const emailsB = new Set(getEmailsFromText(listB));
+            
+            // Bに含まれないメールアドレスをフィルタリング
+            const result = emailsA.filter(email => !emailsB.has(email));
+            
+            // 重複を除去して出力
+            const uniqueResult = [...new Set(result)];
+            
+            // 結果を出力
+            document.getElementById('outputArea').value = uniqueResult.join('\n');
+            
+            // 統計を更新
+            document.getElementById('statOriginal').textContent = emailsA.length;
+            document.getElementById('statRemoved').textContent = emailsA.length - result.length;
+            document.getElementById('statResult').textContent = uniqueResult.length;
+            
+            showToast('フィルタリングが完了しました');
+        }
+
+        // すべてクリア
+        function clearAll() {
+            document.getElementById('listA').value = '';
+            document.getElementById('listB').value = '';
+            document.getElementById('outputArea').value = '';
+            document.getElementById('countA').textContent = '0 件';
+            document.getElementById('countB').textContent = '0 件';
+            document.getElementById('statOriginal').textContent = '0';
+            document.getElementById('statRemoved').textContent = '0';
+            document.getElementById('statResult').textContent = '0';
+            showToast('すべてクリアしました');
+        }
+
+        // クリップボードにコピー
+        async function copyToClipboard() {
+            const output = document.getElementById('outputArea').value;
+            if (!output) {
+                showToast('コピーする内容がありません');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(output);
+                showToast('クリップボードにコピーしました');
+            } catch (err) {
+                showToast('コピーに失敗しました');
+            }
+        }
+
+        // ダウンロード
+        function downloadResult() {
+            const output = document.getElementById('outputArea').value;
+            if (!output) {
+                showToast('ダウンロードする内容がありません');
+                return;
+            }
+            
+            const blob = new Blob([output], { type: 'text/plain; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'filtered_emails.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('ダウンロードを開始しました');
+        }
+
+        // トースト表示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // イベントリスナー設定
+        document.getElementById('listA').addEventListener('input', updateCounts);
+        document.getElementById('listB').addEventListener('input', updateCounts);
+    </script>
+</body>
+</html>
+
