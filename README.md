@@ -61,11 +61,9 @@ info@company.co.jp
 
 ## デモ
 
-GitHub Pagesでホスティングすることで、そのまま利用できます。
+GitHub Pages でホスティングしたデモはこちらです：
 
-```
-https://[username].github.io/Email_Selector/
-```
+https://sptaku.github.io/Email_Selector/
 
 ## ライセンス
 
