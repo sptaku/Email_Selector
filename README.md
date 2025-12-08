@@ -63,7 +63,7 @@ info@company.co.jp
 
 GitHub Pages でホスティングしたデモはこちらです：
 
-<a href="https://sptaku.github.io/Email_Selector/" target="_blank">https://sptaku.github.io/Email_Selector/</a>
+https://sptaku.github.io/Email_Selector/
 
 ## ライセンス
 
